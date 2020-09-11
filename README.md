@@ -16,3 +16,6 @@ This user interaction implements its own listeners and handlers which are not on
 In order to run the program in a desktop environment, the main.java in the android-desktop needs to be compiled.
 
 In order to run the program in an android environment, the Android Development Kit is required to compile for an Android target device. This can then either be uploaded to an actual android device or be run on an emulator.
+
+## Notes
+I haven't run this code in years, so it might not work anymore.
