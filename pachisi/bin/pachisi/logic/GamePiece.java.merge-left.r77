@@ -1,0 +1,85 @@
+package pachisi.logic;
+
+import pachisi.Pachisi;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.InputProcessor;
+import pachisi.logic.board.*;
+
+public class GamePiece extends Actor implements BoardObject {
+
+  // CONSTANTS ////////////////////////////////////////////////////
+  // Sprite textures for the  different colored game pieces corresponding to the color in the Player class
+	protected static final Texture[] SPRITES =  {new Texture(Gdx.files.internal("graphics/red_pawn.png")),
+												 new Texture(Gdx.files.internal("graphics/yellow_pawn.png")),
+												 new Texture(Gdx.files.internal("graphics/green_pawn.png")),
+												 new Texture(Gdx.files.internal("graphics/blue_pawn.png"))};
+                                     
+  // Anonymous listener class used to receieve and parse input for GamePieces                               
+  protected static final InputListener INPUT_LISTENER = new InputListener(){
+    public boolean touchDown(InputEvent event, float x, float y, int pointer, int button){
+      GamePiece piece = (GamePiece) event.getListenerActor();
+      piece.isSelected = true;
+      GameEngine.setSelectedPiece(piece);
+      GameEngine.trace(piece.getPlayerColor(), "piece selected");
+      return true;
+    }
+  };
+  
+  // VARIABLES ////////////////////////////////////////////////////
+	public Player player; // the Player that this piece belongs to
+	protected boolean hasShield; // whether or not this piece has a shield to protect it from being bumped
+	public boolean isSelected; // whether or not this piece is selected
+	
+	// CONSTRUCTOR ///////////////////////////////////////////////////
+	public GamePiece(Player player){
+		this.player = player;
+		this.hasShield = false;
+		this.isSelected = false; 	
+		super.setTouchable(Touchable.enabled);
+    this.setWidth(Pachisi.TILE_SIZE);
+    this.setHeight(Pachisi.TILE_SIZE);
+		this.addListener(INPUT_LISTENER);
+	}
+	
+  // METHODS ////////////////////////////////////////////////////////
+  // draw(batch,alpha) - draws this piece
+    @Override
+  public void draw(Batch batch, float alpha){    
+    batch.draw(SPRITES[player.color],this.getColumn() * Pachisi.TILE_SIZE, (800-32 - this.getRow() * Pachisi.TILE_SIZE));
+  }
+      
+	// getColumn() - returns the column that this piece occupies based off of its horizontal position
+	public int getColumn(){ return (int)(this.getX()/Pachisi.TILE_SIZE); }
+  // getRow() - returns the row that this piece occupies based off of its vertical position
+	public int getRow(){ return (int)(this.getY()/Pachisi.TILE_SIZE); }
+	// getPlayerColor() - returns the color of the player (and the GamePiece itself)
+	public int getPlayerColor(){ return player.color; }
+	
+  // setColumn(column) - sets the x position of this piece to the corresponding column on the grid
+	public void setColumn(int column){ this.setX(column*Pachisi.TILE_SIZE);  }
+  // setRow(row) - sets the y position of this piece to the corresponding row on the grid
+	public void setRow(int row){ this.setY(row*Pachisi.TILE_SIZE); }
+	
+  // hasShield() - returns whether or not this piece has a shield
+	public boolean hasShield(){ return this.hasShield; }
+	
+  // moveTo(space) - sets the position of this piece to the position of a space on the board
+	public void moveTo(Space space){
+		this.setColumn(space.getColumn());
+		this.setRow(space.getRow());
+	}
+   
+  // setSelected(boolean) - sets whether or not this GamePiece has been selected
+  public void setSelected(boolean selected){ this.isSelected = selected; }
+	
+}

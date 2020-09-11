@@ -1,0 +1,148 @@
+package pachisi.logic.board;
+
+
+import pachisi.Pachisi;
+import pachisi.logic.*;
+import pachisi.screens.GameScreen;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.scenes.scene2d.*;
+
+public class Space extends Actor implements BoardObject {
+
+  // CONSTANTS /////////////////////////////////////////////////////
+  // Anonymous listener class used to receieve and parse input for GamePieces                               
+  protected static final InputListener INPUT_LISTENER = new InputListener(){
+    public boolean touchDown(InputEvent event, float x, float y, int pointer, int button){
+      
+    	Space space = (Space) event.getListenerActor();
+    	System.out.print(space.toString() + " -> ");
+    	if(null != space.next) System.out.println(space.next.toString());
+    	else System.out.println("no next");
+    	if(null != space.specialNext) System.out.println("\t-> " + space.specialNext.toString() + " " + space.specialNext.color);
+    	else System.out.println("no special next");
+    	GameEngine.setSelectedSpace(space);
+    	GameEngine.trace(space.getPlayerColor(), "space selected");
+    	GameScreen.engine.movePiece();
+      
+      
+      
+      return true;
+    }
+  };
+	
+  // VARIABLES ////////////////////////////////////////////////////
+	protected int column, row; // this Space's column and row position
+	protected int color; // this Space's integer color value (see Player class)
+	protected boolean isCastle; // whether or not this Space is a castle space
+	protected boolean isOOB; // whether or not this Space is a playable space (does it lie within the confines of the game board?)
+	protected GamePiece occupant; // the GamePiece that is currently occupying this Space
+	protected Space next; // the next Space in the board's directed graph
+	protected Space specialNext; // used when there are two possible next spaces, where specialNext is the next space for a specific color
+	protected boolean isSelected; // whether or not this space has been selected
+	public Texture graphic = new Texture(Gdx.files.internal("graphics/tilespace.png"));
+	
+  // CONSTRUCTORS ////////////////////////////////////////////////
+	public Space(int column, int row, boolean isOOB){
+		this.column = column;
+		this.row = row;
+		this.color = Player.NONE;
+		this.isOOB = isOOB;
+		this.isCastle = false;
+	    this.isSelected = false;
+	    super.setTouchable(Touchable.enabled);
+	    this.setVisible(true);
+	    this.setBounds(column*Pachisi.TILE_SIZE,800 - row*Pachisi.TILE_SIZE,Pachisi.TILE_SIZE,Pachisi.TILE_SIZE);
+	    this.addListener(INPUT_LISTENER);
+	}
+	
+	public Space(int column, int row, int color, boolean isCastle){
+		this.column = column;
+		this.row = row;
+		this.color = color;
+		this.isCastle = isCastle;
+		this.isOOB = false;
+	    this.isSelected = false;        
+	    super.setTouchable(Touchable.enabled);
+	    this.setVisible(true);
+	    this.setBounds(column*Pachisi.TILE_SIZE, 800 - row*Pachisi.TILE_SIZE,Pachisi.TILE_SIZE,Pachisi.TILE_SIZE);
+	    this.addListener(INPUT_LISTENER);
+	}
+   
+  // STATIC FUNCTIONS ////////////////////////////////////////////
+  // distance(start,end,color) - returns the distance between the start and end spaces for a GamePiece of a specific color.
+  // a negative return value implies that the end Space is unreachable (either it is OOB or the wrong color)
+  public static int distance(Space start, Space end, int color){
+    int d = 0;
+    Space s = start;
+    if(end.isOOB || (!end.isCastle && end.color != color && end.color != Player.NONE)) return -1; // if end is OOB or a colored non-castle space (end lane space) that doesn't match the color, there is no route to this end space
+    while(null != s && !s.equals(end)){
+      s = s.getNext(color);
+      d++;
+    }
+    return d;
+  }
+	
+  // METHODS /////////////////////////////////////////////////////
+  // getColumn() - return this Space's horizontal position on the grid
+	public int getColumn(){ return this.column; }
+  // getRow() - return this Space's vertical position on the grid
+	public int getRow(){ return this.row; }
+  // getPlayerColor() - return this Space's color
+	public int getPlayerColor(){ return this.color; }
+	
+	public boolean isCastle(){ return this.isCastle; }
+	
+  // getNext() - return the default next space
+	public Space getNext(){
+		return this.next;
+	}
+	
+  // getNext(color) - return the next space for a given color
+	public Space getNext(int color){
+		if(this.specialNext != null && this.specialNext.color == color)
+			return this.specialNext;
+		else
+			return this.next;
+	}
+	
+  // setNext(next) - sets the default next space
+	void setNext(Space next){ this.next = next; }
+  // setSpecialNext(specialNext) - sets the special next space
+	void setSpecialNext(Space specialNext){ this.specialNext = specialNext; }
+	
+  // toString() - returns a string representation of this Space
+	public String toString(){ return "Space("+this.column+","+this.row+")"; }
+	
+//  // getX() - returns the horizontal position of this Space in pixels
+//	public float getX(){ return this.column * Pachisi.TILE_SIZE; }
+//  // getY() - returns the vertical position of this Space in pixels
+//	public float getY(){ return this.row * Pachisi.TILE_SIZE; }
+   
+   // setSelected(selected) - sets whether or not this Space has been selected
+  public void setSelected(boolean selected){ this.isSelected = selected; }
+  
+  // equals(obj) - returns whether or not this Space is equal to that Object
+  @Override
+  public boolean equals(Object obj){
+    if(obj instanceof Space){
+      Space that = (Space)obj;
+      return (this.getColumn() == that.getColumn() && this.getRow() == that.getRow() && this.getPlayerColor() == that.getPlayerColor());
+    } else
+      return false;
+  }
+  
+  @Override
+  public void draw(Batch batch, float alpha){    
+	 
+    //if(this.isSelected) batch.draw(this.graphic,this.getX(), this.getY());
+   
+  } 
+  
+  public void dispose(){
+	  this.graphic.dispose();
+  }
+	
+}

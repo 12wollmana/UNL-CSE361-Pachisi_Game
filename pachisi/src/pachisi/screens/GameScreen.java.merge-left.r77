@@ -1,0 +1,311 @@
+package pachisi.screens;
+
+import java.util.Random;
+
+import com.badlogic.gdx.maps.tiled.*;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+import com.badlogic.gdx.maps.tiled.renderers.*;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.List;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.SnapshotArray;
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+import pachisi.Pachisi;
+import pachisi.logic.*;
+import pachisi.logic.board.Board;
+import pachisi.screens.PauseMenuScreen;
+
+public class GameScreen extends AbstractScreen {
+
+	public GameScreen(Pachisi game, Player[] players) {
+		super(game);
+		this.players = players;
+		engine = new GameEngine();
+
+	}
+
+	public int testInt = 0;
+	protected TiledMap board;
+	protected OrthogonalTiledMapRenderer renderer;
+	protected OrthographicCamera camera;
+	protected TextButton pauseButton;
+	protected TextButton drawCardButton;
+	protected TextButton nextPlayerButton;
+	protected Player[] players;
+	protected GameEngine engine;
+	protected Board gameBoard;
+	protected GamePiece[] gamepieces;
+
+	@Override
+	public void render(float delta) {
+		// (1) Draw the player scores
+
+		// this.engine.drawPiece(275f, 275f);
+
+		SnapshotArray<Actor> children = table.getChildren();
+		int numChildren = children.size;
+		for (int i = 4; i < numChildren; i++) {
+			table.removeActor(children.get(children.size - 1));
+		}
+
+		table.row();
+		table.add(this.players[0].getName() + " : "
+				+ this.players[0].getScore());
+		table.row();
+		table.add(this.players[1].getName() + " : "
+				+ this.players[1].getScore());
+		table.row();
+		table.add(this.players[2].getName() + " : "
+				+ this.players[2].getScore());
+		table.row();
+		table.add(this.players[3].getName() + " : "
+				+ this.players[3].getScore());
+		table.row();
+
+		for (int i = 0; i < 4; i++) {
+			if (this.players[i].getScore() == 4) {
+				System.out.println(players[i].getName() + " wins!");
+				this.game.setScreen(new WinScreen(this.game, i + 1));
+			}
+		}
+
+		int card_num = 0;
+		String cardStr = "";
+		if (this.engine.currentCards.size() != 0)
+			cardStr = this.engine.currentCards.get(0).STRING_VALUES[this.engine.currentCards
+					.get(0).getValue() - 1];
+		if (this.engine.getState() == 0)
+			table.add(players[(this.engine.getCurrentPlayer())].getName()
+					+ ", draw a card");
+		
+		else
+			table.add(players[(this.engine.getCurrentPlayer())].getName() + "'s Card : " + cardStr);
+
+		// get the current game state
+		// gamepieces[0].setRow(gameBoard.SPACES[8][14].getRow());
+		// gamepieces[0].setColumn(gameBoard.SPACES[8][14].getColumn());
+
+		// update the actors
+		stage.act(delta);
+
+		// (2) draw the result
+
+		// clear the screen with the given RGB color (black)
+		Gdx.gl.glClearColor(1f, 1f, 1f, 1f);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		// draw the actors
+
+		renderer.setView(camera);
+		renderer.render();
+		stage.draw();
+		// draw the table debug lines
+		// Table.drawDebug( stage );
+	}
+
+	public void resize(int width, int height) {
+		//camera.viewportWidth = width;
+		//camera.viewportHeight = height;
+		camera.update();
+
+	}
+
+	public void create() {
+		System.out.println("Creating screen GameScreen");
+
+		//gameBoard = new Board();
+		//gameBoard.linkSpaces();
+
+	  // int[] rows = { 10, 13, 1, 4, 10, 13 };
+	  // gamepieces = new GamePiece[16];
+	  // for (int i = 0; i < 16; i++) {
+	  // 	gamepieces[i] = new GamePiece(this.players[i / 4]);
+	  // 	gamepieces[i].setHeight(32f);
+	  // 	gamepieces[i].setWidth(32f);
+
+	  // }
+
+		//for (int i = 0; i < 8; i++) {
+	  // 	gamepieces[i].setRow(rows[i % 2]);
+	  // 	gamepieces[i].setColumn(rows[(i / 2)]);
+	  // }
+	  // for (int i = 8; i < 16; i++) {
+		//	gamepieces[i].setRow(rows[i % 2 + 2]);
+	  // 	gamepieces[i].setColumn(rows[(i / 2 - 2)]);
+	  // }
+
+	  // for (int i = 0; i < 16; i++) {
+
+	  // 	stage.addActor(gamepieces[i]);
+
+	  // }
+     this.engine.setup(stage); // everything above (setting up board, adding board and pieces to stage) should now be accomplished by this
+
+		// gamepieces[0].setRow(gameBoard.SPACES[8][8].getRow());
+		// gamepieces[0].setColumn(gameBoard.SPACES[8][8].getColumn());
+		// gamepieces[4].setRow(gameBoard.SPACES[8][12].getRow());
+		// gamepieces[4].setColumn(gameBoard.SPACES[8][12].getColumn());
+		// gamepieces[8].setRow(gameBoard.SPACES[6][6].getRow());
+		// gamepieces[8].setColumn(gameBoard.SPACES[6][6].getColumn());
+		// gamepieces[12].setRow(gameBoard.SPACES[6][3].getRow());
+		// gamepieces[12].setColumn(gameBoard.SPACES[6][3].getColumn());
+
+		Table table = getTable();
+		// table = getTable();
+		table.add("").spaceBottom(500);
+		table.row();
+
+		this.pauseButton = new TextButton("PAUSE", getSkin());
+
+		pauseButton.addListener(new ClickListener() {
+			public void clicked(InputEvent event, float x, float y) {
+				game.setScreen(new PauseMenuScreen(game));
+			}
+		});
+
+		table.add(pauseButton).size(200, 60).uniform().spaceBottom(10);
+
+		this.drawCardButton = new TextButton("DRAW CARD", getSkin());
+
+		drawCardButton.addListener(new ClickListener() {
+			public void clicked(InputEvent event, float x, float y) {
+				engine.drawCard(false);
+				Sound sound = Gdx.audio.newSound(Gdx.files
+						.internal("data/Card_Flipping.mp3"));
+				 sound.play();
+				// Random rand = new Random();
+				// int card_number = rand.nextInt(12);
+				// System.out.println("card : " + card_number);
+			}
+		});
+		
+		this.nextPlayerButton = new TextButton("Next Player", getSkin());
+
+		
+
+		table.add(drawCardButton).size(200, 60).uniform().spaceBottom(10);
+		
+		table.add(nextPlayerButton);
+		table.add("").spaceTop(500);
+
+		System.out.println(table.getChildren().size);
+		stage.addActor(table);
+
+		this.board = new TmxMapLoader().load("graphics/board_tilemap.tmx");
+		board.getLayers().get(0).setOpacity(1f);
+
+		this.renderer = new OrthogonalTiledMapRenderer(this.board);
+
+		this.camera = new OrthographicCamera();
+		//this.camera.translate(245, 120);
+		this.camera.setToOrtho(true);
+		
+		// table = new Table();
+		// table.remove();
+
+	}
+
+	public void show() {
+
+		System.out.println("Showing GameScreen" + testInt);
+		for (int i = 0; i < 4; i++) {
+			System.out.println("Player " + i + " : "
+					+ this.players[i].getName() + "   color : "
+					+ this.players[i].getColor());
+		}
+
+		// Gdx.input.setInputProcessor( stage );
+		Gdx.input.setInputProcessor(this);
+
+	}
+
+	public void hide() {
+
+	}
+
+	public void pause() {
+	}
+
+	public void resume() {
+	}
+
+	public void dispose() {
+		this.board.dispose();
+		this.renderer.dispose();
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+
+		return true;
+	}
+	
+	
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		boolean isSelecting = false;
+		Vector2 coords = new Vector2(screenX, screenY);
+		coords = stage.screenToStageCoordinates(coords);
+
+		for (GamePiece g : this.engine.getGamePieces()) {
+			if (g.isSelected) {
+
+				System.out.println(coords.x + " " + coords.y);
+				System.out.println(coords.x / 32 + " " + coords.y / 32);
+				//g.setRow(24 - (int) ((coords.y + 6) / 32));
+				g.setRow(24-(int) ((coords.y) / 32));
+				g.setColumn((int) (coords.x) / 32);
+				this.engine.nextTurn();
+				if (g.getColumn() == 7 && g.getRow() == 7) {
+
+					g.player.setScore(g.player.getScore() + 1);
+					g.remove();
+
+					// g.clear();
+				}
+				g.isSelected = false;
+				isSelecting = true;
+			}
+		}
+		if (!isSelecting && this.engine.getState() == 1) {
+			stage.touchDown((int) (coords.x), (int) (coords.y), pointer,
+					button);
+		}
+
+		if (screenX > 56 && screenX < 257 && screenY > 555 && screenY < 613) {
+
+			InputEvent event = new InputEvent();
+			stage.touchDown(screenX, screenY, pointer, button);
+
+			stage.touchUp(screenX, screenY, pointer, button);
+
+		} else if (screenX > 257 && screenX < 457 && screenY > 555
+				&& screenY < 613) {
+
+			stage.touchDown(screenX, screenY, pointer, button);
+			stage.touchUp(screenX, screenY, pointer, button);
+
+		}else if(screenX > 410 && screenX < 500 && screenY > 555 && screenY < 613){
+			this.engine.nextTurn();
+		}
+
+		else {
+
+			System.out.println("x : " + screenX + " y : " + screenY);
+		}
+		return false;
+	}
+
+}
