@@ -1,5 +1,5 @@
 # Pachisi
-<em>Jacob Bohac, Joshua Grossman, Aaron Wollman
+<em>Jacob Bohac, Joshua Grossman, Aaron Wollman</em>
 
 ## Description
 This project was written using libGdx libraries which allowed us to write a cross-platform application.
